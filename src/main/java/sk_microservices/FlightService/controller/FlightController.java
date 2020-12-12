@@ -10,6 +10,8 @@ import sk_microservices.FlightService.forms.AddFlightForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/flight")
 public class FlightController {
@@ -43,5 +45,17 @@ public class FlightController {
         }
     }
 
+    @GetMapping("/getAll")
+    public ResponseEntity<List<Flight>> getFlights() {
+
+        try {
+            List<Flight> flights = flightRepository.findAll();
+
+            return new ResponseEntity<List<Flight>>(flights, HttpStatus.ACCEPTED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 
 }
