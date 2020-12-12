@@ -34,7 +34,6 @@ public class FlightController {
 
             Flight let = new Flight(avion, addFlightForm.getPocetnaDestinacija(), addFlightForm.getKrajnjaDestinacija(),
                     addFlightForm.getDuzinaLeta(), addFlightForm.getCena());
-            System.out.println(let);
 
             flightRepository.save(let);
 
