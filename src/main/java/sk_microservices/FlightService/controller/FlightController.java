@@ -3,6 +3,8 @@ package sk_microservices.FlightService.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import sk_microservices.FlightService.entites.Airplane;
 import sk_microservices.FlightService.entites.Flight;
@@ -12,7 +14,7 @@ import sk_microservices.FlightService.repository.FlightRepository;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/flight")
 public class FlightController {
 
@@ -44,16 +46,18 @@ public class FlightController {
         }
     }
 
-    @GetMapping("/getAll")
-    public ResponseEntity<List<Flight>> getFlights() {
+    @GetMapping("/list")
+    public  String getFlights(Model theModel) {
 
         try {
-            List<Flight> flights = flightRepository.findAll();
+            List<Flight> theFlights = flightRepository.findAll();
 
-            return new ResponseEntity<List<Flight>>(flights, HttpStatus.ACCEPTED);
+            theModel.addAttribute("flights", theFlights);
+
+            return "flights/list-flights";
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return null;
         }
     }
 

@@ -3,10 +3,9 @@ package sk_microservices.FlightService.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 import sk_microservices.FlightService.entites.Airplane;
 import sk_microservices.FlightService.entites.Flight;
 import sk_microservices.FlightService.forms.AddAirplaneForm;
@@ -14,7 +13,9 @@ import sk_microservices.FlightService.forms.AddFlightForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
 
-@RestController
+import java.util.List;
+
+@Controller
 @RequestMapping("/airplane")
 public class AirplaneController {
 
@@ -27,19 +28,50 @@ public class AirplaneController {
         this.flightRepository = flightRepository;
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<String> addAirplane(@RequestBody AddAirplaneForm addAirplaneForm) {
+    @GetMapping("/showFormForAdd")
+    public String showFormForAdd(Model theModel) {
 
         try {
-            Airplane avion = new Airplane(addAirplaneForm.getNaziv(), addAirplaneForm.getKapacitetPutnika());
+            Airplane theAirplane = new Airplane();
 
-            airplaneRepository.save(avion);
+            theModel.addAttribute("airplane", theAirplane);
 
-            return new ResponseEntity<String>("successfully added", HttpStatus.ACCEPTED);
+            return "airplanes/airplane-form";
         } catch (Exception e) {
             e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return null;
         }
+    }
+
+    @PostMapping("/save")
+    public String saveAirplane(@ModelAttribute("airplane") Airplane theAirplane) {
+
+        airplaneRepository.save(theAirplane);
+
+        return "redirect:/airplane/list";
+    }
+
+    @GetMapping("/list")
+    public String getFlights(Model theModel) {
+
+        try {
+            List<Airplane> theAirplanes = airplaneRepository.findAll();
+
+            theModel.addAttribute("airplanes", theAirplanes);
+
+            return "airplanes/list-airplanes";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @GetMapping("/delete")
+    public String delete(@RequestParam("airplaneId") long theId) {
+
+        airplaneRepository.deleteById(theId);
+
+        return "redirect:/airplane/list";
     }
 
 }

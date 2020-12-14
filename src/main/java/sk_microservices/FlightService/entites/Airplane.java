@@ -29,5 +29,4 @@ public class Airplane {
         this.naziv = naziv;
         this.kapacitetPutnika = kapacitetPutnika;
     }
-
 }
