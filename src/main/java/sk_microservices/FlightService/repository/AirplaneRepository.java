@@ -7,5 +7,4 @@ import sk_microservices.FlightService.entites.Airplane;
 @Repository
 public interface AirplaneRepository extends JpaRepository<Airplane, Long> {
 
-
 }

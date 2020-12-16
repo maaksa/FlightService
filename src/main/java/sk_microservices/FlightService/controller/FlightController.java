@@ -14,7 +14,7 @@ import sk_microservices.FlightService.repository.FlightRepository;
 
 import java.util.List;
 
-@Controller
+@RestController
 @RequestMapping("/flight")
 public class FlightController {
 
@@ -27,7 +27,7 @@ public class FlightController {
         this.flightRepository = flightRepository;
     }
 
-    @PostMapping("/add")
+    @PostMapping("/save")
     public ResponseEntity<String> addFlight(@RequestBody AddFlightForm addFlightForm) {
 
         try {
@@ -47,18 +47,45 @@ public class FlightController {
     }
 
     @GetMapping("/list")
-    public  String getFlights(Model theModel) {
+    public ResponseEntity<List<Flight>> getFlights() {
 
         try {
-            List<Flight> theFlights = flightRepository.findAll();
+            List<Flight> flights = flightRepository.findAll();
 
-            theModel.addAttribute("flights", theFlights);
-
-            return "flights/list-flights";
+            return new ResponseEntity<List<Flight>>(flights, HttpStatus.ACCEPTED);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteFlight(@PathVariable long id) {
+
+        try {
+            flightRepository.deleteById(id);
+
+            return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    //za GUI //todo
+//    @GetMapping("/list")
+//    public  String getFlights(Model theModel) {
+//
+//        try {
+//            List<Flight> theFlights = flightRepository.findAll();
+//
+//            theModel.addAttribute("flights", theFlights);
+//
+//            return "flights/list-flights";
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
 
 }
