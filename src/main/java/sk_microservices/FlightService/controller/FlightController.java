@@ -12,6 +12,7 @@ import sk_microservices.FlightService.forms.AddFlightForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -46,8 +47,29 @@ public class FlightController {
         }
     }
 
+    //samo sa slobodnim kapacitetom mesta za putnike
     @GetMapping("/list")
     public ResponseEntity<List<Flight>> getFlights() {
+
+        try {
+            List<Flight> flightsToReturn = new ArrayList<>();
+            List<Flight> flights = flightRepository.findAll();
+
+            for (Flight f : flights) {
+                if (f.getAvion().getKapacitetPutnika() != 0) {
+                    flightsToReturn.add(f);
+                }
+            }
+
+            return new ResponseEntity<List<Flight>>(flightsToReturn, HttpStatus.ACCEPTED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/allFlights")
+    public ResponseEntity<List<Flight>> getAllFlights() {
 
         try {
             List<Flight> flights = flightRepository.findAll();

@@ -8,5 +8,6 @@ import sk_microservices.FlightService.entites.Flight;
 @Repository
 public interface FlightRepository extends JpaRepository<Flight, Long> {
 
+    boolean existsByAvion_Id(long id);
 
 }

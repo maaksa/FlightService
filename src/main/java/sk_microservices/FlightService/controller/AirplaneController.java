@@ -19,8 +19,6 @@ import java.util.List;
 @RequestMapping("/airplane")
 public class AirplaneController {
 
-    public static final String HEADER_STRING = "Authorization";
-
     private AirplaneRepository airplaneRepository;
     private FlightRepository flightRepository;
 
@@ -93,6 +91,12 @@ public class AirplaneController {
     public ResponseEntity<String> deleteAirplane(@PathVariable long id) {
 
         try {
+
+            if(flightRepository.existsByAvion_Id(id)){
+                System.out.println("Postoji");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
             airplaneRepository.deleteById(id);
 
             return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
