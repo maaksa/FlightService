@@ -1,19 +1,24 @@
 package sk_microservices.FlightService.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.jms.core.JmsTemplate;
 import org.springframework.web.bind.annotation.*;
 import sk_microservices.FlightService.entites.Airplane;
 import sk_microservices.FlightService.entites.Flight;
 import sk_microservices.FlightService.forms.AddFlightForm;
+import sk_microservices.FlightService.forms.ticketservice.TicketForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
+import sk_microservices.FlightService.utils.UtilsMethods;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.jms.Queue;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 @RequestMapping("/flight")
@@ -22,8 +27,18 @@ public class FlightController {
     private AirplaneRepository airplaneRepository;
     private FlightRepository flightRepository;
 
+    private JmsTemplate jmsTemplate;
+
+    private Queue userQueue;
+
+    private Queue ticketQueue;
+
     @Autowired
-    public FlightController(AirplaneRepository airplaneRepository, FlightRepository flightRepository) {
+    public FlightController(JmsTemplate jmsTemplate, Queue userQueue, Queue ticketQueue,
+                            AirplaneRepository airplaneRepository, FlightRepository flightRepository) {
+        this.jmsTemplate = jmsTemplate;
+        this.userQueue = userQueue;
+        this.ticketQueue = ticketQueue;
         this.airplaneRepository = airplaneRepository;
         this.flightRepository = flightRepository;
     }
@@ -42,6 +57,17 @@ public class FlightController {
 
             return new ResponseEntity<String>("successfully added", HttpStatus.ACCEPTED);
         } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/capacity/{id}")
+    public ResponseEntity<Integer> getCapacity(@PathVariable long id){
+        try {
+            int capacity = flightRepository.getCapacityForFlight(id);
+            return new ResponseEntity<>(capacity, HttpStatus.ACCEPTED);
+        }catch (Exception e){
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -86,10 +112,35 @@ public class FlightController {
     public ResponseEntity<String> deleteFlight(@PathVariable long id) {
 
         try {
-            flightRepository.deleteById(id);
+            //flightRepository.deleteById(id);
+            ResponseEntity<Object> response = UtilsMethods.sendGet("http://localhost:8082/ticket/allTicketsForFlight/" + id);
+            if(response.getBody() == null){
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
+            ArrayList<LinkedHashMap<Object, Object>> list = (ArrayList<LinkedHashMap<Object, Object>>) response.getBody();
+            for (LinkedHashMap<Object, Object> hashMap : list) {
+                Gson gson = new Gson();
+                String jsonString = gson.toJson(hashMap, Map.class);
+                jmsTemplate.convertAndSend(userQueue, jsonString);
+                //todo napravi da u ticket queue stavlja samo jednom zato sto sve karte imaju isti flight id
+                jmsTemplate.convertAndSend(ticketQueue, jsonString);
+            }
 
             return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
         } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/miles/{id}")
+    public ResponseEntity<Integer> flightLength(@PathVariable long id){
+        try {
+            int miles = flightRepository.getLengthForFlight(id);
+            return new ResponseEntity<>(miles, HttpStatus.ACCEPTED);
+        }catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }

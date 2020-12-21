@@ -64,7 +64,6 @@ public class AirplaneController {
 
         try {
             Airplane avion = new Airplane(addAirplaneForm.getNaziv(), addAirplaneForm.getKapacitetPutnika());
-
             airplaneRepository.save(avion);
 
             return new ResponseEntity<String>("successfully added", HttpStatus.ACCEPTED);
