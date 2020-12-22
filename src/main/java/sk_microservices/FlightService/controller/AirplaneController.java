@@ -12,8 +12,11 @@ import sk_microservices.FlightService.forms.AddAirplaneForm;
 import sk_microservices.FlightService.forms.AddFlightForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
+import sk_microservices.FlightService.utils.UtilsMethods;
 
 import java.util.List;
+
+import static sk_microservices.FlightService.utils.UtilsMethods.HEADER_STRING;
 
 @RestController
 @RequestMapping("/airplane")
@@ -60,9 +63,20 @@ public class AirplaneController {
 
     //dodavanje novoga aviona, poziva se iz admin controllera
     @PostMapping("/save")
-    public ResponseEntity<String> addAirplane(@RequestBody AddAirplaneForm addAirplaneForm) {
+    public ResponseEntity<String> addAirplane(@RequestHeader(value = HEADER_STRING) String token, @RequestBody AddAirplaneForm addAirplaneForm) {
 
         try {
+
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
+            if (res.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
             Airplane avion = new Airplane(addAirplaneForm.getNaziv(), addAirplaneForm.getKapacitetPutnika());
             airplaneRepository.save(avion);
 
@@ -87,13 +101,23 @@ public class AirplaneController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteAirplane(@PathVariable long id) {
+    public ResponseEntity<String> deleteAirplane(@RequestHeader(value = HEADER_STRING) String token, @PathVariable long id) {
 
         try {
 
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
+            if (res.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
             if(flightRepository.existsByAvion_Id(id)){
                 System.out.println("Postoji");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
             airplaneRepository.deleteById(id);

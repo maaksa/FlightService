@@ -20,6 +20,9 @@ import javax.jms.Queue;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static sk_microservices.FlightService.utils.UtilsMethods.HEADER_STRING;
+
+
 @RestController
 @RequestMapping("/flight")
 public class FlightController {
@@ -44,9 +47,20 @@ public class FlightController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<String> addFlight(@RequestBody AddFlightForm addFlightForm) {
+    public ResponseEntity<String> addFlight(@RequestBody AddFlightForm addFlightForm, @RequestHeader(value = HEADER_STRING) String token) {
 
         try {
+
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
+            if (response.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
             Airplane avion = addFlightForm.getAvion();
             airplaneRepository.save(avion);
 
@@ -63,11 +77,11 @@ public class FlightController {
     }
 
     @GetMapping("/capacity/{id}")
-    public ResponseEntity<Integer> getCapacity(@PathVariable long id){
+    public ResponseEntity<Integer> getCapacity(@PathVariable long id) {
         try {
             int capacity = flightRepository.getCapacityForFlight(id);
             return new ResponseEntity<>(capacity, HttpStatus.ACCEPTED);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -75,9 +89,19 @@ public class FlightController {
 
     //samo sa slobodnim kapacitetom mesta za putnike
     @GetMapping("/list")
-    public ResponseEntity<List<Flight>> getFlights() {
+    public ResponseEntity<List<Flight>> getFlights(@RequestHeader(value = HEADER_STRING) String token) {
 
         try {
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/checkUser", token);
+            if (response.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
             List<Flight> flightsToReturn = new ArrayList<>();
             List<Flight> flights = flightRepository.findAll();
 
@@ -109,12 +133,22 @@ public class FlightController {
 
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteFlight(@PathVariable long id) {
+    public ResponseEntity<String> deleteFlight(@RequestHeader(value = HEADER_STRING) String token, @PathVariable long id) {
 
         try {
-            //flightRepository.deleteById(id);
+
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
+            if (res.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
             ResponseEntity<Object> response = UtilsMethods.sendGet("http://localhost:8082/ticket/allTicketsForFlight/" + id);
-            if(response.getBody() == null){
+            if (response.getBody() == null) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
@@ -127,6 +161,9 @@ public class FlightController {
                 jmsTemplate.convertAndSend(ticketQueue, jsonString);
             }
 
+            //todo otkomentarisati
+            //flightRepository.deleteById(id);
+
             return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,11 +172,11 @@ public class FlightController {
     }
 
     @GetMapping("/miles/{id}")
-    public ResponseEntity<Integer> flightLength(@PathVariable long id){
+    public ResponseEntity<Integer> flightLength(@PathVariable long id) {
         try {
             int miles = flightRepository.getLengthForFlight(id);
             return new ResponseEntity<>(miles, HttpStatus.ACCEPTED);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

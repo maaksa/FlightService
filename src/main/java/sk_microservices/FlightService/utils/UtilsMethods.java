@@ -8,6 +8,8 @@ import org.springframework.web.client.RestTemplate;
 
 public class UtilsMethods {
 
+    public static final String HEADER_STRING = "Authorization";
+
     public static ResponseEntity<Object> sendGet(String url) {
 
         RestTemplate restTemplate = new RestTemplate();
@@ -40,6 +42,20 @@ public class UtilsMethods {
         HttpEntity<Object> entity = new HttpEntity<Object>(null, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+
+        return response;
+    }
+
+    public static ResponseEntity<Boolean> checkAuthorization(String url, String token) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+
+        headers.add(HEADER_STRING, token);
+
+        HttpEntity<String> entity = new HttpEntity<String>(null, headers);
+
+        ResponseEntity<Boolean> response = restTemplate.exchange(url, HttpMethod.GET, entity, Boolean.class);
 
         return response;
     }
