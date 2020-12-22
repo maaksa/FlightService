@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.sipios.springsearch.anotation.SearchSpec;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,7 +53,9 @@ public class FlightController {
     }
 
     @GetMapping("/searchFlight")
-    public ResponseEntity<List<Flight>> searchForFlight(@SearchSpec Specification<Flight> specs, @RequestHeader(value = HEADER_STRING) String token) {
+    public ResponseEntity<Page<Flight>> searchForFlight(@SearchSpec Specification<Flight> specs,
+                                                        @RequestParam Optional<Integer> page,
+                                                        @RequestHeader(value = HEADER_STRING) String token) {
 
         if (token.isEmpty()) {
             System.out.println("parazan token");
@@ -63,7 +67,9 @@ public class FlightController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        return new ResponseEntity<>(flightRepository.findAll(Specification.where(specs)), HttpStatus.OK);
+        Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
+
+        return new ResponseEntity<Page<Flight>>(flightRepository.findAll(Specification.where(specs), pageRequest), HttpStatus.OK);
     }
 
     @PostMapping("/save")
@@ -109,7 +115,7 @@ public class FlightController {
 
     //samo sa slobodnim kapacitetom mesta za putnike
     @GetMapping("/list")
-    public ResponseEntity<List<Flight>> getFlights(@RequestHeader(value = HEADER_STRING) String token) {
+    public ResponseEntity<Page<Flight>> getFlights(@RequestHeader(value = HEADER_STRING) String token, @RequestParam Optional<Integer> page) {
 
         try {
             if (token.isEmpty()) {
@@ -122,16 +128,11 @@ public class FlightController {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            List<Flight> flightsToReturn = new ArrayList<>();
-            List<Flight> flights = flightRepository.findAll();
+            Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
 
-            for (Flight f : flights) {
-                if (f.getAvion().getKapacitetPutnika() != 0) {
-                    flightsToReturn.add(f);
-                }
-            }
+            Page<Flight> flights = flightRepository.findAllWithCapacity(pageRequest);
 
-            return new ResponseEntity<List<Flight>>(flightsToReturn, HttpStatus.ACCEPTED);
+            return new ResponseEntity<Page<Flight>>(flights, HttpStatus.ACCEPTED);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
