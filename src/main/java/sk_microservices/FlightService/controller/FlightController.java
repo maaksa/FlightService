@@ -3,7 +3,11 @@ package sk_microservices.FlightService.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import com.sipios.springsearch.anotation.SearchSpec;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
@@ -44,6 +48,22 @@ public class FlightController {
         this.ticketQueue = ticketQueue;
         this.airplaneRepository = airplaneRepository;
         this.flightRepository = flightRepository;
+    }
+
+    @GetMapping("/searchFlight")
+    public ResponseEntity<List<Flight>> searchForFlight(@SearchSpec Specification<Flight> specs, @RequestHeader(value = HEADER_STRING) String token) {
+
+        if (token.isEmpty()) {
+            System.out.println("parazan token");
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/checkUser", token);
+        if (response.getBody() == null) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        return new ResponseEntity<>(flightRepository.findAll(Specification.where(specs)), HttpStatus.OK);
     }
 
     @PostMapping("/save")

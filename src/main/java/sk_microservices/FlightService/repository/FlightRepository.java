@@ -1,13 +1,16 @@
 package sk_microservices.FlightService.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 import sk_microservices.FlightService.entites.Airplane;
 import sk_microservices.FlightService.entites.Flight;
 
+@RepositoryRestResource
 @Repository
-public interface FlightRepository extends JpaRepository<Flight, Long> {
+public interface FlightRepository extends JpaRepository<Flight, Long>, JpaSpecificationExecutor<Flight> {
 
     boolean existsByAvion_Id(long id);
 
