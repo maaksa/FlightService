@@ -1,71 +1,98 @@
 <!DOCTYPE HTML>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
+<style>
+    .pagination {
+        display: inline-block;
+    }
+
+    .pagination a {
+        color: black;
+        float: left;
+        padding: 5px 5px;
+        text-decoration: none;
+    }
+
+    .pagination a.active {
+        background-color: gray;
+        color: white;
+        border-radius: 2px;
+    }
+</style>
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
-	<title>Letovi</title>
+    <title>Letovi</title>
 </head>
 
 <body>
 
 <div class="container">
 
-	<h3>Letovi</h3>
-	<hr>
-	
-	<!-- Add a button -->
-<!--	<a th:href="@{/employees/showFormForAdd}"-->
-<!--		class="btn btn-primary btn-sm mb-3">-->
-<!--		Add Employee-->
-<!--	</a>-->
-	
-	
-	<table class="table table-bordered table-striped">
-		<thead class="thead-dark">
-			<tr>
-				<th>Avion</th>
-				<th>Pocetna destinacija</th>
-				<th>Krajnja destinacija</th>
-				<th>Duzina leta</th>
-				<th>Cena</th>
-				<th>Rezervacija</th>
+    <h3>Flights</h3>
+    <hr>
 
-			</tr>
-		</thead>
-		
-		<tbody>
-			<tr th:each="flight : ${flights}">
-			
-				<td th:text="${flight.avion.getNaziv()}" />
-				<td th:text="${flight.pocetnaDestinacija}" />
-				<td th:text="${flight.krajnjaDestinacija}" />
-				<td th:text="${flight.duzinaLeta} + ' minuta'" />
-				<td th:text="${flight.cena} + ' $'" />
+    <!-- Add a button -->
+    <!--	<a th:href="@{/employees/showFormForAdd}"-->
+    <!--		class="btn btn-primary btn-sm mb-3">-->
+    <!--		Add Employee-->
+    <!--	</a>-->
 
 
-				<td>
-					<!-- Add "update" button/link -->
-					<a th:href="@{/employees/showFormForUpdate(employeeId=${flight.id})}"
-					   class="btn btn-info btn-sm">
-						Kupi
-					</a>
+    <table class="table table-bordered table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>Airplane</th>
+            <th>Leaving from</th>
+            <th>Going to</th>
+            <th>Flight length</th>
+            <th>Price</th>
+            <th>Reservation</th>
+
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="flight, iStat : ${flightPage.content}"
+            th:style="${iStat.odd}? 'font-weight: bold;'"
+            th:alt-title="${iStat.even}? 'even' : 'odd'">
+            <td th:text="${flight.avion.getNaziv()}"/>
+            <td th:text="${flight.pocetnaDestinacija}"/>
+            <td th:text="${flight.krajnjaDestinacija}"/>
+            <td th:text="${flight.duzinaLeta} + ' minuta'"/>
+            <td th:text="${flight.cena} + ' $'"/>
 
 
+            <td>
+                <!-- Add "update" button/link -->
+                <a th:href="@{/employees/showFormForUpdate(employeeId=${flight.id})}"
+                   class="btn btn-info btn-sm">
+                    Buy
+                </a>
 
-				</td>
-				
-			</tr>
-		</tbody>		
-	</table>
-	
+
+            </td>
+
+        </tr>
+        </tbody>
+    </table>
+
+    <div th:if="${flightPage.totalPages > 0}" class="pagination"
+         th:each="pageNumber : ${pageNumbers}">
+        <a th:href="@{/flight/list(size=${flightPage.size}, page=${pageNumber})}"
+           th:text=${pageNumber}
+           th:class="${pageNumber==flightPage.number + 1} ? active"></a>
+    </div>
+
 </div>
-	
+
 </body>
 </html>
 

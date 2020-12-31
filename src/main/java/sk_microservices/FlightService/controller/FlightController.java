@@ -13,6 +13,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import sk_microservices.FlightService.entites.Airplane;
 import sk_microservices.FlightService.entites.Flight;
@@ -20,21 +22,26 @@ import sk_microservices.FlightService.forms.AddFlightForm;
 import sk_microservices.FlightService.forms.ticketservice.TicketForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
+import sk_microservices.FlightService.service.FlightService;
 import sk_microservices.FlightService.utils.UtilsMethods;
 
 import javax.jms.Queue;
+import java.awt.print.Book;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static sk_microservices.FlightService.utils.UtilsMethods.HEADER_STRING;
 
 
-@RestController
+@Controller
 @RequestMapping("/flight")
 public class FlightController {
 
     private AirplaneRepository airplaneRepository;
     private FlightRepository flightRepository;
+    private FlightService flightService;
 
     private JmsTemplate jmsTemplate;
 
@@ -44,12 +51,13 @@ public class FlightController {
 
     @Autowired
     public FlightController(JmsTemplate jmsTemplate, Queue userQueue, Queue ticketQueue,
-                            AirplaneRepository airplaneRepository, FlightRepository flightRepository) {
+                            AirplaneRepository airplaneRepository, FlightRepository flightRepository, FlightService flightService) {
         this.jmsTemplate = jmsTemplate;
         this.userQueue = userQueue;
         this.ticketQueue = ticketQueue;
         this.airplaneRepository = airplaneRepository;
         this.flightRepository = flightRepository;
+        this.flightService = flightService;
     }
 
     @GetMapping("/searchFlight")
@@ -113,31 +121,31 @@ public class FlightController {
         }
     }
 
-    //samo sa slobodnim kapacitetom mesta za putnike
-    @GetMapping("/list")
-    public ResponseEntity<Page<Flight>> getFlights(@RequestHeader(value = HEADER_STRING) String token, @RequestParam Optional<Integer> page) {
-
-        try {
-            if (token.isEmpty()) {
-                System.out.println("parazan token");
-                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
-
-            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/checkUser", token);
-            if (response.getBody() == null) {
-                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
-
-            Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
-
-            Page<Flight> flights = flightRepository.findAllWithCapacity(pageRequest);
-
-            return new ResponseEntity<Page<Flight>>(flights, HttpStatus.ACCEPTED);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
+    //todo bez GUI
+//    @GetMapping("/list")
+//    public ResponseEntity<Page<Flight>> getFlights(@RequestHeader(value = HEADER_STRING) String token, @RequestParam Optional<Integer> page) {
+//
+//        try {
+//            if (token.isEmpty()) {
+//                System.out.println("parazan token");
+//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+//            }
+//
+//            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/checkUser", token);
+//            if (response.getBody() == null) {
+//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+//            }
+//
+//            Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
+//
+//            Page<Flight> flights = flightRepository.findAllWithCapacity(pageRequest);
+//
+//            return new ResponseEntity<Page<Flight>>(flights, HttpStatus.ACCEPTED);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
     @GetMapping("/allFlights")
     public ResponseEntity<List<Flight>> getAllFlights() {
@@ -204,19 +212,30 @@ public class FlightController {
     }
 
     //za GUI //todo
-//    @GetMapping("/list")
-//    public  String getFlights(Model theModel) {
-//
-//        try {
-//            List<Flight> theFlights = flightRepository.findAll();
-//
-//            theModel.addAttribute("flights", theFlights);
-//
-//            return "flights/list-flights";
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//    }
+    @GetMapping("/list")
+    public  String getFlights(Model theModel,  @RequestParam("page") Optional<Integer> page, @RequestParam("size") Optional<Integer> size) {
+        try {
+
+            int currentPage = page.orElse(1);
+            int pageSize = size.orElse(2);
+
+            Page<Flight> flightPage = flightService.findPaginated(PageRequest.of(currentPage - 1, pageSize));
+
+            theModel.addAttribute("flightPage", flightPage);
+
+            int totalPages = flightPage.getTotalPages();
+            if (totalPages > 0) {
+                List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
+                        .boxed()
+                        .collect(Collectors.toList());
+                theModel.addAttribute("pageNumbers", pageNumbers);
+            }
+
+            return "flights/list-flights";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 }

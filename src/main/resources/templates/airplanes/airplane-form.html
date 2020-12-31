@@ -7,39 +7,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+          integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
-	<title>Sacuvaj Avion</title>
+    <title>Sacuvaj Avion</title>
 </head>
 
 <body>
 
-	<div class="container">
+<div class="container">
 
-		<h3>Avion</h3>
-		<hr>
+    <h3>Airplane</h3>
+    <hr>
 
-		<p class="h4 mb-4">Sacuvaj Avion</p>
 
-		<form action="#" th:action="@{/airplane/save}"
-						 th:object="${airplane}" method="POST">
+    <form action="#" th:action="@{/airplane/save}"
+          th:object="${airplane}" method="POST">
 
-			<input type="hidden" th:field="*{id}" />
+        <!--			<input type="hidden" th:field="*{id}" />-->
 
-			<input type="text" th:field="*{naziv}"
-					class="form-control mb-4 col-4" placeholder="Naziv">
+        <div class="form-group">
+            <label class="control-label"> Airplane Name </label><input
+                class="form-control" th:field="*{naziv}" required
+                autofocus="autofocus"/>
+        </div>
 
-			<input type="text" th:field="*{kapacitetPutnika}"
-					class="form-control mb-4 col-4" placeholder="Kapacitet Putnika">
+        <div class="form-group">
+            <label class="control-label"> Passenger Capacity </label> <input
+                class="form-control"
+                th:field="*{kapacitetPutnika}" required autofocus="autofocus"/>
+        </div>
 
-			<button type="submit" class="btn btn-info col-2">Sacuvaj</button>
+        <button type="submit" class="btn btn-info col-2">Save</button>
 
-		</form>
+    </form>
 
-		<hr>
-		<a th:href="@{/airplane/list}">Povratak na listu aviona</a>
+    <hr>
+    <a th:href="@{/airplane/list}">Back to the airplane list</a>
 
-	</div>
+</div>
 </body>
 
 </html>
