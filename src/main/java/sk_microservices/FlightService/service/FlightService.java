@@ -12,6 +12,7 @@ import sk_microservices.FlightService.repository.FlightRepository;
 import java.awt.print.Book;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FlightService {
@@ -38,6 +39,11 @@ public class FlightService {
         Page<Flight> flightPage = new PageImpl<Flight>(list, PageRequest.of(currentPage, pageSize), flights.size());
 
         return flightPage;
+    }
+
+    public Flight findById(long id){
+        Optional<Flight> flight = flightRepository.findById(id);
+        return flight.orElse(null);
     }
 
 }

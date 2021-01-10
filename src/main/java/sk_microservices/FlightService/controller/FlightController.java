@@ -64,6 +64,7 @@ public class FlightController {
     @GetMapping("/searchFlight")
     public ResponseEntity<Page<Flight>> searchForFlight(@SearchSpec Specification<Flight> specs,
                                                         @RequestParam Optional<Integer> page,
+                                                        @RequestParam Optional<Integer> size,
                                                         @RequestHeader(value = HEADER_STRING) String token) {
 
         if (token.isEmpty()) {
@@ -76,10 +77,28 @@ public class FlightController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
-        System.out.println(specs);
+        Pageable pageRequest = PageRequest.of(page.orElse(0), size.orElse(2));
+        System.out.println(pageRequest);
 
         return new ResponseEntity<Page<Flight>>(flightRepository.findAll(Specification.where(specs), pageRequest), HttpStatus.OK);
+    }
+
+    @GetMapping("/get/{id}")
+    public ResponseEntity<Flight> getFlight(@RequestHeader(value = HEADER_STRING) String token, @PathVariable Long id) {
+
+        if (token.isEmpty()) {
+            System.out.println("prazan token");
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/user/checkUser", token);
+        if (response.getBody() == null) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+
+        System.out.println(id);
+        return new ResponseEntity<Flight>(flightService.findById(id), HttpStatus.ACCEPTED);
     }
 
     @PostMapping("/save")
@@ -115,7 +134,9 @@ public class FlightController {
     @GetMapping("/capacity/{id}")
     public ResponseEntity<Integer> getCapacity(@PathVariable long id) {
         try {
+            System.out.println("here");
             int capacity = flightRepository.getCapacityForFlight(id);
+            System.out.println(capacity);
             return new ResponseEntity<>(capacity, HttpStatus.ACCEPTED);
         } catch (Exception e) {
             e.printStackTrace();
