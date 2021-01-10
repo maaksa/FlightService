@@ -71,12 +71,13 @@ public class FlightController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/checkUser", token);
+        ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/user/checkUser", token);
         if (response.getBody() == null) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
         Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
+        System.out.println(specs);
 
         return new ResponseEntity<Page<Flight>>(flightRepository.findAll(Specification.where(specs), pageRequest), HttpStatus.OK);
     }
@@ -90,12 +91,12 @@ public class FlightController {
                 System.out.println("parazan token");
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-
-            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
+/*
+            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/admin/checkAdmin", token);
             if (response.getBody() == null) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-
+*/
             Airplane avion = addFlightForm.getAvion();
             airplaneRepository.save(avion);
 
