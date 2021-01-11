@@ -73,7 +73,7 @@ public class AirplaneController {
 
             if(flightRepository.existsByAvion_Id(id)){
                 System.out.println("Postoji");
-                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("Dodeljen letu", HttpStatus.BAD_REQUEST);
             }
 
             airplaneRepository.deleteById(id);

@@ -172,7 +172,9 @@ public class FlightController {
             ArrayList<LinkedHashMap<Object, Object>> list = (ArrayList<LinkedHashMap<Object, Object>>) response.getBody();
             LinkedHashMap<Object, Object> miles = new LinkedHashMap<>();
             miles.put("miles", flightRepository.getLengthForFlight(id));
-            list.add(miles);
+            if(!list.isEmpty()) {
+                list.add(miles);
+            }
             for (LinkedHashMap<Object, Object> hashMap : list) {
                 Gson gson = new Gson();
                 String jsonString = gson.toJson(hashMap, Map.class);
