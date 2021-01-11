@@ -5,16 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Optional;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class AddAirplaneForm {
-
-    private Long id;
-    private String naziv;
-    private int kapacitetPutnika;
-
+public class FlightForm {
+    private String pocetnaDestinacija;
+    private String krajnjaDestinacija;
+    private int duzinaLeta;
+    private float cena;
+    private AddAirplaneForm avion;
 }

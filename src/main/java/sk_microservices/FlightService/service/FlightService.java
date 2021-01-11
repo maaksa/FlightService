@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk_microservices.FlightService.entites.Flight;
+import sk_microservices.FlightService.forms.AddFlightForm;
 import sk_microservices.FlightService.repository.FlightRepository;
 
 import java.awt.print.Book;
@@ -44,6 +45,16 @@ public class FlightService {
     public Flight findById(long id){
         Optional<Flight> flight = flightRepository.findById(id);
         return flight.orElse(null);
+    }
+
+    public void deleteById(long id){
+        flightRepository.deleteById(id);
+    }
+
+    public Flight save(AddFlightForm addFlightForm){
+        Flight flight = new Flight(addFlightForm.getAvion(), addFlightForm.getPocetnaDestinacija(),
+                addFlightForm.getKrajnjaDestinacija(), addFlightForm.getDuzinaLeta(), addFlightForm.getCena());
+        return flightRepository.save(flight);
     }
 
 }

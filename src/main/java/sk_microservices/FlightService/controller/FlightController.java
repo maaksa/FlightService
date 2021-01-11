@@ -20,6 +20,7 @@ import sk_microservices.FlightService.entites.Airplane;
 import sk_microservices.FlightService.entites.Flight;
 import sk_microservices.FlightService.forms.AddAirplaneForm;
 import sk_microservices.FlightService.forms.AddFlightForm;
+import sk_microservices.FlightService.forms.FlightForm;
 import sk_microservices.FlightService.forms.ticketservice.TicketForm;
 import sk_microservices.FlightService.repository.AirplaneRepository;
 import sk_microservices.FlightService.repository.FlightRepository;
@@ -101,23 +102,28 @@ public class FlightController {
         return new ResponseEntity<Flight>(flightService.findById(id), HttpStatus.ACCEPTED);
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<String> addFlight(@RequestBody AddFlightForm addFlightForm, @RequestHeader(value = HEADER_STRING) String token) {
+    @PostMapping("/admin/save")
+    public ResponseEntity<String> addFlight(@RequestBody FlightForm addFlightForm, @RequestHeader(value = HEADER_STRING) String token) {
 
         try {
-
+            System.out.println(addFlightForm.getAvion());
             if (token.isEmpty()) {
                 System.out.println("parazan token");
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-/*
+
             ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/admin/checkAdmin", token);
             if (response.getBody() == null) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
-*/
-            Airplane avion = addFlightForm.getAvion();
-            airplaneRepository.save(avion);
+
+            AddAirplaneForm addAirplaneForm = addFlightForm.getAvion();
+            Airplane avion = new Airplane(addAirplaneForm.getNaziv(), addAirplaneForm.getKapacitetPutnika());
+            if(addAirplaneForm.getId() != null && addAirplaneForm.getId() != 0){
+                avion.setId(addAirplaneForm.getId());
+            }else{
+                avion = airplaneRepository.save(avion);
+            }
 
             Flight let = new Flight(avion, addFlightForm.getPocetnaDestinacija(), addFlightForm.getKrajnjaDestinacija(),
                     addFlightForm.getDuzinaLeta(), addFlightForm.getCena());
@@ -134,7 +140,6 @@ public class FlightController {
     @GetMapping("/capacity/{id}")
     public ResponseEntity<Integer> getCapacity(@PathVariable long id) {
         try {
-            System.out.println("here");
             int capacity = flightRepository.getCapacityForFlight(id);
             System.out.println(capacity);
             return new ResponseEntity<>(capacity, HttpStatus.ACCEPTED);
@@ -144,33 +149,7 @@ public class FlightController {
         }
     }
 
-    //todo bez GUI
-//    @GetMapping("/list")
-//    public ResponseEntity<Page<Flight>> getFlights(@RequestHeader(value = HEADER_STRING) String token, @RequestParam Optional<Integer> page) {
-//
-//        try {
-//            if (token.isEmpty()) {
-//                System.out.println("parazan token");
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            ResponseEntity<Boolean> response = UtilsMethods.checkAuthorization("http://localhost:8080/checkUser", token);
-//            if (response.getBody() == null) {
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
-//
-//            Page<Flight> flights = flightRepository.findAllWithCapacity(pageRequest);
-//
-//            return new ResponseEntity<Page<Flight>>(flights, HttpStatus.ACCEPTED);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//    }
-
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("admin/delete/{id}")
     public ResponseEntity<String> deleteFlight(@RequestHeader(value = HEADER_STRING) String token, @PathVariable long id) {
 
         try {
@@ -180,12 +159,12 @@ public class FlightController {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
+            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/admin/checkAdmin", token);
             if (res.getBody() == null) {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            ResponseEntity<Object> response = UtilsMethods.sendGet("http://localhost:8082/ticket/allTicketsForFlight/" + id);
+            ResponseEntity<Object> response = UtilsMethods.sendGet("http://localhost:8762/rest-ticket-service/ticket/allTicketsForFlight/" + id);
             if (response.getBody() == null) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
@@ -200,7 +179,7 @@ public class FlightController {
             }
 
             //todo otkomentarisati
-            //flightRepository.deleteById(id);
+            flightService.deleteById(id);
 
             return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
         } catch (Exception e) {
@@ -217,94 +196,6 @@ public class FlightController {
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    //todo za GUI, dodati proveru kapaciteta
-    @GetMapping("/list")
-    public  String getFlights(Model theModel,  @RequestParam("page") Optional<Integer> page, @RequestParam("size") Optional<Integer> size) {
-        try {
-
-//            Pageable pageRequest = PageRequest.of(page.orElse(0), 2);
-//
-//            Page<Flight> flights = flightRepository.findAllWithCapacity(pageRequest);
-
-            int currentPage = page.orElse(1);
-            int pageSize = size.orElse(2);
-
-            Page<Flight> flightPage = flightService.findPaginated(PageRequest.of(currentPage - 1, pageSize));
-
-            theModel.addAttribute("flightPage", flightPage);
-
-            int totalPages = flightPage.getTotalPages();
-            if (totalPages > 0) {
-                List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
-                        .boxed()
-                        .collect(Collectors.toList());
-                theModel.addAttribute("pageNumbers", pageNumbers);
-            }
-
-            return "flights/list-flights";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    //todo za GUI
-    @PostMapping("/admin/save")
-    public String saveAdminFlight(@ModelAttribute("flight") Flight theFlight) {
-        try {
-            flightRepository.save(theFlight);
-
-            return "redirect:/flight/admin/list";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/error";
-        }
-    }
-
-    //todo za GUI
-    @GetMapping("/admin/list")
-    public  String getAdminFlights(Model theModel) {
-        try {
-            List<Flight> theFlights = flightRepository.findAll();
-
-            theModel.addAttribute("flights", theFlights);
-
-            return "flights/list-admin-flights";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    //todo za GUI
-    @GetMapping("/admin/delete")
-    public String delete(@RequestParam("flightId") long theId) {
-        try {
-            flightRepository.deleteById(theId);
-
-            return "redirect:/flight/admin/list";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/error";
-        }
-    }
-
-    //todo za GUI
-    @GetMapping("/admin/showFormForAdd")
-    public String showFormForAdd(Model theModel) {
-        try {
-
-            theModel.addAttribute("flight", new AddFlightForm());
-            theModel.addAttribute("airplanes", airplaneRepository.findAll());
-
-            return "flights/flight-form";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/error";
         }
     }
 

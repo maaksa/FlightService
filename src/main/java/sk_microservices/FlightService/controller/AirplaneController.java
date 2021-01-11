@@ -31,152 +31,71 @@ public class AirplaneController {
         this.flightRepository = flightRepository;
     }
 
-    //todo bez GUI
-    //dodavanje novoga aviona, poziva se iz admin controllera
-//    @PostMapping("/save")
-//    public ResponseEntity<String> addAirplane(@RequestHeader(value = HEADER_STRING) String token, @RequestBody AddAirplaneForm addAirplaneForm) {
-//
-//        try {
-//
-//            if (token.isEmpty()) {
-//                System.out.println("parazan token");
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
-//            if (res.getBody() == null) {
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            Airplane avion = new Airplane(addAirplaneForm.getNaziv(), addAirplaneForm.getKapacitetPutnika());
-//            airplaneRepository.save(avion);
-//
-//            return new ResponseEntity<String>("successfully added", HttpStatus.ACCEPTED);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//    }
-
-    //todo bez GUI
-//    @DeleteMapping("/delete/{id}")
-//    public ResponseEntity<String> deleteAirplane(@RequestHeader(value = HEADER_STRING) String token, @PathVariable long id) {
-//
-//        try {
-//
-//            if (token.isEmpty()) {
-//                System.out.println("parazan token");
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8080/admin/checkAdmin", token);
-//            if (res.getBody() == null) {
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            if(flightRepository.existsByAvion_Id(id)){
-//                System.out.println("Postoji");
-//                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//            }
-//
-//            airplaneRepository.deleteById(id);
-//
-//            return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
-//        } catch (Exception e) {
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//    }
-
-//    //todo za GUI
-//    @GetMapping("/showFormForAdd")
-//    public String showFormForAdd(Model theModel) {
-//        try {
-//            Airplane theAirplane = new Airplane();
-//
-//            theModel.addAttribute("airplane", theAirplane);
-//
-//            return "airplanes/airplane-form";
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return "redirect:/error";
-//        }
-//    }
-
-
-    //todo za GUI
-    @GetMapping("/showFormForAdd")
-    public String showFormForAdd(Model theModel) {
-        try {
-
-            theModel.addAttribute("airplane", new AddAirplaneForm());
-
-            return "airplanes/airplane-form";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/error";
-        }
-    }
-
-    //todo za GUI
     @PostMapping("/save")
-    public String saveAirplane(@ModelAttribute("airplane") Airplane theAirplane) {
-        try {
-            airplaneRepository.save(theAirplane);
+    public ResponseEntity<String> addAirplane(@RequestHeader(value = HEADER_STRING) String token, @RequestBody AddAirplaneForm addAirplaneForm) {
 
-            return "redirect:/airplane/list";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/error";
-        }
-    }
-
-    //todo za GUI
-    @GetMapping("/delete")
-    public String delete(@RequestParam("airplaneId") long theId) {
         try {
-            if (flightRepository.existsByAvion_Id(theId)) {
-                System.out.println("Postoji");
-                return "redirect:/error";
-                //return "redirect:/error-delete-airplane";
+
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            airplaneRepository.deleteById(theId);
+            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/admin/checkAdmin", token);
+            if (res.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
 
-            return "redirect:/airplane/list";
+            Airplane avion = new Airplane(addAirplaneForm.getNaziv(), addAirplaneForm.getKapacitetPutnika());
+            airplaneRepository.save(avion);
+
+            return new ResponseEntity<String>("successfully added", HttpStatus.ACCEPTED);
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/error";
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
-    //todo za GUI
-    @GetMapping("/list")
-    public String getFlights(Model theModel) {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteAirplane(@RequestHeader(value = HEADER_STRING) String token, @PathVariable long id) {
+
         try {
-            List<Airplane> theAirplanes = airplaneRepository.findAll();
 
-            theModel.addAttribute("airplanes", theAirplanes);
+            if (token.isEmpty()) {
+                System.out.println("parazan token");
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
 
-            return "airplanes/list-airplanes";
+            ResponseEntity<Boolean> res = UtilsMethods.checkAuthorization("http://localhost:8762/rest-user-service/admin/checkAdmin", token);
+            if (res.getBody() == null) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+
+            if(flightRepository.existsByAvion_Id(id)){
+                System.out.println("Postoji");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
+            airplaneRepository.deleteById(id);
+
+            return new ResponseEntity<>("successfully deleted", HttpStatus.ACCEPTED);
         } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/error";
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
-    //todo bez GUI
-//    @GetMapping("/list")
-//    public ResponseEntity<List<Airplane>> getFlights() {
-//
-//        try {
-//            List<Airplane> airplaneList = airplaneRepository.findAll();
-//
-//            return new ResponseEntity<List<Airplane>>(airplaneList, HttpStatus.ACCEPTED);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-//        }
-//    }
+    @GetMapping("/list")
+    public ResponseEntity<List<Airplane>> getAirplanes() {
+
+        try {
+            List<Airplane> airplaneList = airplaneRepository.findAll();
+
+            return new ResponseEntity<List<Airplane>>(airplaneList, HttpStatus.ACCEPTED);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
 
 
 }
