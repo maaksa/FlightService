@@ -106,7 +106,6 @@ public class FlightController {
     public ResponseEntity<String> addFlight(@RequestBody FlightForm addFlightForm, @RequestHeader(value = HEADER_STRING) String token) {
 
         try {
-            System.out.println(addFlightForm.getAvion());
             if (token.isEmpty()) {
                 System.out.println("parazan token");
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
@@ -127,6 +126,9 @@ public class FlightController {
 
             Flight let = new Flight(avion, addFlightForm.getPocetnaDestinacija(), addFlightForm.getKrajnjaDestinacija(),
                     addFlightForm.getDuzinaLeta(), addFlightForm.getCena());
+            if(addFlightForm.getId() != 0){
+                let.setId(addFlightForm.getId());
+            }
 
             flightRepository.save(let);
 
@@ -171,10 +173,12 @@ public class FlightController {
 
             ArrayList<LinkedHashMap<Object, Object>> list = (ArrayList<LinkedHashMap<Object, Object>>) response.getBody();
             LinkedHashMap<Object, Object> miles = new LinkedHashMap<>();
-            miles.put("miles", flightRepository.getLengthForFlight(id));
+            System.out.println(list);
+
             if(!list.isEmpty()) {
-                list.add(miles);
+                list.get(0).put("miles", flightRepository.getLengthForFlight(id));
             }
+            System.out.println(list);
             for (LinkedHashMap<Object, Object> hashMap : list) {
                 Gson gson = new Gson();
                 String jsonString = gson.toJson(hashMap, Map.class);

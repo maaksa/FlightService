@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class FlightForm {
+    private long id;
     private String pocetnaDestinacija;
     private String krajnjaDestinacija;
     private int duzinaLeta;
