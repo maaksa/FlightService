@@ -11,11 +11,11 @@ public class UtilsMethods {
 
     public static final String HEADER_STRING = "Authorization";
 
-    public static ResponseEntity<Object> sendGet(String url) {
+    public static ResponseEntity<Object> sendGet(String url, String token) {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-
+        headers.add(HEADER_STRING, token);
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
         ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET, entity, Object.class);
@@ -23,10 +23,11 @@ public class UtilsMethods {
         return response;
     }
 
-    public static ResponseEntity<String> sendPost(String url, Object body) {
+    public static ResponseEntity<String> sendPost(String url, Object body, String token) {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
+        headers.add(HEADER_STRING, token);
 
         HttpEntity<Object> entity = new HttpEntity<Object>(body, headers);
 
@@ -35,11 +36,11 @@ public class UtilsMethods {
         return response;
     }
 
-    public static ResponseEntity<String> sendDelete(String url) {
+    public static ResponseEntity<String> sendDelete(String url, String token) {
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-
+        headers.add(HEADER_STRING, token);
         HttpEntity<Object> entity = new HttpEntity<Object>(null, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);

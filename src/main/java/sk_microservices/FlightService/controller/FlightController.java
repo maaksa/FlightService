@@ -164,12 +164,15 @@ public class FlightController {
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
 
-            ResponseEntity<Object> response = UtilsMethods.sendGet("http://localhost:8762/rest-ticket-service/ticket/allTicketsForFlight/" + id);
+            ResponseEntity<Object> response = UtilsMethods.sendGet("http://localhost:8762/rest-ticket-service/ticket/allTicketsForFlight/" + id, token);
             if (response.getBody() == null) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
 
             ArrayList<LinkedHashMap<Object, Object>> list = (ArrayList<LinkedHashMap<Object, Object>>) response.getBody();
+            LinkedHashMap<Object, Object> miles = new LinkedHashMap<>();
+            miles.put("miles", flightRepository.getLengthForFlight(id));
+            list.add(miles);
             for (LinkedHashMap<Object, Object> hashMap : list) {
                 Gson gson = new Gson();
                 String jsonString = gson.toJson(hashMap, Map.class);
